@@ -24,7 +24,7 @@
     <div id="app">
 
         <div class="container">
-            
+
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <div class="navbar-header">
@@ -63,6 +63,15 @@
             </div>
 
             <div class="row hide" id="content">
+                
+                <div class="container">
+                    <form>
+                        <input id="file_input" class="form-control col-md-4" type="file" placeholder="File upload" @click='readURL()' style="max-width:90%;">
+                        <button type="submit" name="button" @click='uploadFile()'>Upload</button>
+                    </form>
+                    <h2 id="upload_response"></h2>
+                </div>
+
                 <div class="col-md-3">
 
                     <ul class="list-group">
@@ -91,34 +100,10 @@
                 </div>
 
                 <div class="col-md-9">
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="#" class="thumbnail">
-                            <img src="/public/folder.png">
-                            <h4 class="text-center">File.doc</h4>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="#" class="thumbnail">
-                            <img src="/public/music-player.png">
-                            <h4 class="text-center">File.doc</h4>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="#" class="thumbnail">
-                            <img src="/public/play-button.png">
-                            <h4 class="text-center">File.doc</h4>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="#" class="thumbnail">
-                            <img src="/public/folder.png">
-                            <h4 class="text-center">File.doc</h4>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="#" class="thumbnail">
-                            <img src="/public/folder.png">
-                            <h4 class="text-center">File.doc</h4>
+                    <div class="col-lg-3 col-md-4 col-sm-6" v-for="file in files">
+                        <a :href="file.url" class="thumbnail">
+                            <img :src="file.url">
+                            <h4 class="text-center">{{file.name}}</h4>
                         </a>
                     </div>
                 </div>
@@ -204,7 +189,64 @@
         new Vue({
             el: '#app',
 
+            data: {
+                files: [],
+                owner: '5a8510fe67614036165e9d75',
+                upload_status: ''
+            },
+
             methods: {
+                getAllFiles() {
+                    axios.get(`http://localhost:3000/api/assets/${this.owner}/`)
+                        .then(response => {
+                            this.files = response.data.docs
+                            console.log(response.data.docs)
+                        }).catch(err => {
+                            console.log(err)
+                        })
+                },
+                uploadFile() {
+                    let input = $('#file_input')
+                    console.log(file)
+                    axios.post(`http://localhost:3000/api/assets/${this.owner}/upload`,
+                        { avatar: input })
+                        .then(response => {
+                            console.log(response)
+                        }).catch(err => {
+                            console.log(err)
+                        })
+
+                },
+                readURL(e) {
+                    var files = e.target.files || e.dataTransfer.files;
+                    if (!files.length)
+                        return;
+                    console.log('ini read url -------->', files);
+                    this.createImage(files[0]);
+                },
+                createImage(file) {
+                    var image = new Image();
+                    var reader = new FileReader();
+                    var vm = this;
+                    reader.onload = (e) => {
+                        vm.image = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+                getThumbnail(file) {
+                    if (file.category == 'Document') {
+                        return './public/folder.png'
+                    }
+                    if (file.category == 'Audio') {
+                        return './public/music-player.png'
+                    }
+                    if (file.category == 'Video') {
+                        return './public/play-button.png'
+                    }
+                    if (file.category == 'Image') {
+                        return file.url
+                    }
+                },
                 login() {
                     axios.post('http://localhost:3000/api/auth/login', {
                             email: $('#email').val(),
@@ -242,6 +284,9 @@
                     window.location.href = 'index.html';
                 }
 
+            },
+            created() {
+                this.getAllFiles()
             }
         })
     </script>
