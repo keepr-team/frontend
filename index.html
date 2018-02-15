@@ -24,7 +24,7 @@
     <div id="app">
 
         <div class="container">
-
+            
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <div class="navbar-header">
@@ -47,17 +47,22 @@
                         </ul>
                         <ul class="nav navbar-nav navbar-right">
                             <li>
-                                <a data-toggle="modal" data-target="#login-modal">Login</a>
+                                <a id="login-button" data-toggle="modal" data-target="#login-modal">Login</a>
                             </li>
                             <li>
-                                <a class="hide">Logout</a>
+                                <a class="hide" id="logout-button" v-on:click="logout">Logout</a>
                             </li>
                         </ul>
                     </div>
                 </div>
             </nav>
 
-            <div class="row">
+            <div class="jumbotron hide" id="jumbotron">
+                <h1>Keepr!</h1>
+                <p>Save your important files on the cloud</p>
+            </div>
+
+            <div class="row hide" id="content">
                 <div class="col-md-3">
 
                     <ul class="list-group">
@@ -185,7 +190,15 @@
     <script>
         $(document).ready(function () {
             if (localStorage.getItem('token')) {
-                $('#login-button').addClass('invisible-*');
+                $('#login-button').addClass('hide');
+                $('#logout-button').removeClass('hide');
+                $('#jumbotron').addClass('hide');
+                $('#content').removeClass('hide');
+            } else {
+                $('#content').addClass('hide');
+                $('#jumbotron').removeClass('hide');
+                $('#logout-button').addClass('hide');
+                $('#login-button').removeClass('hide');
             }
         });
         new Vue({
@@ -200,6 +213,8 @@
                         .then(function (payload) {
                             localStorage.setItem('token', payload.data.token);
                             localStorage.setItem('owner', payload.data.owner);
+                            $('#login-modal').removeClass('in');
+                            window.location.href = 'index.html';
                         })
                         .catch(function (error) {
                             console.log(error);
@@ -212,11 +227,19 @@
                             password: $('#password-register').val()
                         })
                         .then(function (payload) {
+                            $('#login-modal').removeClass('in');
                             console.log(payload);
+                            window.location.href = 'index.html';
                         })
                         .catch(function (error) {
                             console.log(error);
                         });
+                },
+
+                logout() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('owner');
+                    window.location.href = 'index.html';
                 }
 
             }
